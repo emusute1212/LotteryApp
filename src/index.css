@@ -1,0 +1,56 @@
+:root {
+  color-scheme: dark;
+  --color-bg: #06152d;
+  --color-bg-deep: #081125;
+  --color-surface: rgba(255, 248, 230, 0.94);
+  --color-border: rgba(255, 255, 255, 0.18);
+  --color-text: #fff6e4;
+  --color-panel-text: #112144;
+  --color-muted: rgba(255, 246, 228, 0.76);
+  --color-muted-strong: rgba(17, 33, 68, 0.68);
+  --color-accent-strong: #c97c05;
+  --shadow-card: 0 22px 48px rgba(0, 0, 0, 0.2);
+  font-family:
+    "Avenir Next",
+    "Hiragino Sans",
+    "Yu Gothic",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-height: 100%;
+  background:
+    linear-gradient(180deg, rgba(13, 38, 80, 0.58), transparent 36%),
+    linear-gradient(135deg, var(--color-bg), var(--color-bg-deep));
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: transparent;
+  color: var(--color-text);
+}
+
+body,
+button,
+input {
+  font-family: inherit;
+}
+
+button,
+input {
+  font-size: 1rem;
+}
+
+#root {
+  min-height: 100vh;
+}
+

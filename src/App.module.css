@@ -1,0 +1,464 @@
+.appShell {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.backgroundGlow {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(244, 185, 66, 0.32), transparent 38%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.16), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(42, 91, 166, 0.45), transparent 28%);
+  pointer-events: none;
+}
+
+.page {
+  position: relative;
+  width: min(1200px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 48px 0 72px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.heroTitle {
+  margin: 0 0 16px;
+  font-size: clamp(2.4rem, 5vw, 4.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.heroLead,
+.sectionLead,
+.revealLead,
+.fieldHint {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.heroAside {
+  display: grid;
+  gap: 12px;
+}
+
+.summaryBadge,
+.summaryCard,
+.statCard,
+.completeCard,
+.confirmItem,
+.tierCard,
+.panel {
+  background: var(--color-surface);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+.summaryBadge {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-radius: 20px;
+}
+
+.summaryBadge span,
+.summaryLabel,
+.statLabel,
+.winnerLabel,
+.completeCardMeta,
+.stepLabel {
+  color: var(--color-muted-strong);
+  font-size: 0.95rem;
+}
+
+.summaryBadge strong,
+.summaryValue,
+.confirmItemCount,
+.statValue {
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+}
+
+.stepper {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stepItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(10, 23, 49, 0.4);
+  color: rgba(255, 248, 230, 0.7);
+}
+
+.stepItemActive {
+  background: linear-gradient(135deg, rgba(244, 185, 66, 0.24), rgba(255, 248, 230, 0.12));
+  border-color: rgba(244, 185, 66, 0.55);
+  color: var(--color-text);
+}
+
+.stepItemDone {
+  background: rgba(255, 248, 230, 0.16);
+  color: var(--color-text);
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  font-weight: 700;
+}
+
+.panel {
+  padding: 28px;
+  border-radius: 32px;
+}
+
+.revealPanel {
+  min-height: 62vh;
+}
+
+.sectionHeader,
+.revealHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--color-accent-strong);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.sectionTitle,
+.revealTitle {
+  margin: 0;
+  font-size: clamp(2rem, 3.6vw, 3.2rem);
+  line-height: 1;
+}
+
+.form,
+.tierList,
+.confirmList,
+.completeList {
+  display: grid;
+  gap: 20px;
+}
+
+.fieldBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-weight: 700;
+}
+
+.input {
+  width: 100%;
+  padding: 16px 18px;
+  border: 1px solid rgba(12, 34, 72, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--color-panel-text);
+  font: inherit;
+}
+
+.input:focus {
+  outline: 3px solid rgba(244, 185, 66, 0.28);
+  border-color: rgba(244, 185, 66, 0.72);
+}
+
+.inlineStats,
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.statCard,
+.summaryCard {
+  padding: 18px 20px;
+  border-radius: 22px;
+}
+
+.listHeader {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.listTitle,
+.confirmItemTitle,
+.completeCardTitle,
+.tierCardTitle {
+  margin: 0;
+}
+
+.tierCard {
+  padding: 20px;
+  border-radius: 24px;
+}
+
+.tierCardHeader,
+.completeCardHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.tierGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(180px, 0.8fr);
+  gap: 16px;
+}
+
+.tierIndex {
+  margin: 0 0 6px;
+  color: var(--color-accent-strong);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.tierActions,
+.actionRow {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actionRow {
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton,
+.iconButton {
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    opacity 160ms ease,
+    background 160ms ease;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton {
+  padding: 14px 22px;
+}
+
+.iconButton {
+  padding: 10px 14px;
+  background: rgba(12, 34, 72, 0.08);
+  color: var(--color-panel-text);
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, #f4b942, #ffd98d);
+  color: #291500;
+}
+
+.secondaryButton {
+  background: rgba(12, 34, 72, 0.08);
+  color: var(--color-panel-text);
+}
+
+.ghostButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--color-panel-text);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.ghostButton:hover,
+.iconButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.ghostButton:disabled,
+.iconButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.errorText {
+  margin: 0;
+  color: #b93434;
+  font-weight: 700;
+}
+
+.confirmItem,
+.completeCard {
+  border-radius: 24px;
+}
+
+.confirmItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+}
+
+.revealHeader {
+  align-items: center;
+}
+
+.progressPill {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(255, 248, 230, 0.16);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.heroNumber {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 24px 0 8px;
+  padding: 18px 22px;
+  border-radius: 24px;
+  background: rgba(255, 248, 230, 0.12);
+}
+
+.heroNumber strong {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+}
+
+.winnerStage {
+  min-height: 320px;
+  margin: 32px 0;
+}
+
+.winnerStage,
+.numberCloud {
+  display: grid;
+  gap: 18px;
+}
+
+.winnerLine {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px 20px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, rgba(255, 248, 230, 0.95), rgba(255, 233, 182, 0.95));
+  color: #19233f;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+  list-style: none;
+}
+
+.winnerValue {
+  font-size: clamp(2.2rem, 6vw, 4.8rem);
+  letter-spacing: -0.03em;
+}
+
+.waitingBadge {
+  place-self: center;
+  padding: 14px 18px;
+  border-radius: 999px;
+  background: rgba(255, 248, 230, 0.16);
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.completeCard {
+  padding: 20px 22px;
+}
+
+.numberCloud {
+  grid-template-columns: repeat(auto-fit, minmax(120px, max-content));
+}
+
+.numberChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 14px;
+  border-radius: 999px;
+  background: rgba(12, 34, 72, 0.08);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .page {
+    width: min(100% - 24px, 1200px);
+    padding-top: 24px;
+  }
+
+  .hero,
+  .summaryGrid,
+  .inlineStats,
+  .tierGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stepper {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sectionHeader,
+  .revealHeader,
+  .listHeader,
+  .confirmItem,
+  .tierCardHeader,
+  .completeCardHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .winnerLine {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .actionRow {
+    justify-content: stretch;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .ghostButton {
+    width: 100%;
+  }
+}
+
