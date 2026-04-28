@@ -50,9 +50,10 @@ export const createDrawSession = (
   });
 
   return {
-    status: "revealing",
+    status: "drawing",
     startedAt: new Date().toISOString(),
     currentPrizeIndex: 0,
+    revealedWinnerCount: 0,
     results,
   };
 };
@@ -62,4 +63,3 @@ export const getTierResult = (
   prizeTierId: string,
 ): PrizeResult | undefined =>
   session.results.find((result) => result.prizeTierId === prizeTierId);
-

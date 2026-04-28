@@ -16,6 +16,7 @@ const persistedState = {
     status: "revealing",
     startedAt: "2026-04-27T12:00:00.000Z",
     currentPrizeIndex: 1,
+    revealedWinnerCount: 1,
     results: [
       { prizeTierId: "first", winnerNumbers: [7] },
       { prizeTierId: "second", winnerNumbers: [10, 22] },
@@ -60,8 +61,7 @@ describe("App persistence", () => {
       expect(screen.getByRole("heading", { name: "2等" })).toBeInTheDocument();
     });
 
-    expect(screen.getByText("30名")).toBeInTheDocument();
-    expect(screen.getByText("2 / 2")).toBeInTheDocument();
+    expect(screen.getByText("10番")).toBeInTheDocument();
+    expect(screen.getByText("2名当選")).toBeInTheDocument();
   });
 });
-

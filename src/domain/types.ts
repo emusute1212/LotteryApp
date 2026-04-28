@@ -16,11 +16,11 @@ export type PrizeResult = {
 };
 
 export type DrawSession = {
-  status: "revealing" | "complete";
+  status: "drawing" | "revealing" | "complete";
   startedAt: string;
   currentPrizeIndex: number;
+  revealedWinnerCount: number;
   results: PrizeResult[];
 };
 
-export type AppStage = "setup" | "confirm" | "reveal" | "complete";
-
+export type AppStage = "setup" | "drawing" | "reveal" | "complete";

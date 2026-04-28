@@ -12,7 +12,8 @@ type LotteryStore = {
   session: DrawSession | null;
   saveConfig: (config: LotteryConfig) => void;
   editConfig: () => void;
-  startDraw: () => void;
+  beginReveal: () => void;
+  revealNextWinner: () => void;
   advancePrize: () => void;
   restartWithSameConfig: () => void;
   resetAll: () => void;
@@ -38,30 +39,55 @@ export const useLotteryStore = create<LotteryStore>()(
   persist(
     (set, get) => ({
       ...initialState,
-      saveConfig: (config) =>
+      saveConfig: (config) => {
+        const normalizedConfig = normalizeConfig(config);
+
         set({
-          config: normalizeConfig(config),
-          session: null,
-          stage: "confirm",
-        }),
+          config: normalizedConfig,
+          session: createDrawSession(normalizedConfig),
+          stage: "drawing",
+        });
+      },
       editConfig: () =>
         set((state) => ({
           config: state.config,
           session: null,
           stage: "setup",
         })),
-      startDraw: () => {
-        const { config } = get();
+      beginReveal: () =>
+        set((state) => {
+          if (!state.session) {
+            return state;
+          }
 
-        if (!config) {
-          return;
-        }
+          return {
+            stage: "reveal" as AppStage,
+            session: {
+              ...state.session,
+              status: "revealing" as const,
+            },
+          };
+        }),
+      revealNextWinner: () =>
+        set((state) => {
+          if (!state.session) {
+            return state;
+          }
 
-        set({
-          session: createDrawSession(config),
-          stage: "reveal",
-        });
-      },
+          const currentResult = state.session.results[state.session.currentPrizeIndex];
+          const nextCount = Math.min(
+            state.session.revealedWinnerCount + 1,
+            currentResult?.winnerNumbers.length ?? 0,
+          );
+
+          return {
+            session: {
+              ...state.session,
+              status: "revealing" as const,
+              revealedWinnerCount: nextCount,
+            },
+          };
+        }),
       advancePrize: () =>
         set((state) => {
           if (!state.session) {
@@ -84,22 +110,64 @@ export const useLotteryStore = create<LotteryStore>()(
             stage: "reveal" as AppStage,
             session: {
               ...state.session,
+              status: "revealing" as const,
               currentPrizeIndex: state.session.currentPrizeIndex + 1,
+              revealedWinnerCount: 0,
             },
           };
         }),
-      restartWithSameConfig: () =>
-        set((state) => ({
-          config: state.config,
-          session: null,
-          stage: state.config ? "confirm" : "setup",
-        })),
+      restartWithSameConfig: () => {
+        const { config } = get();
+
+        if (!config) {
+          set(initialState);
+          return;
+        }
+
+        set({
+          config,
+          session: createDrawSession(config),
+          stage: "drawing",
+        });
+      },
       resetAll: () => set(initialState),
     }),
     {
       name: STORAGE_KEY,
-      version: 1,
+      version: 2,
+      migrate: (persistedState) => {
+        const state = (persistedState ?? {}) as Partial<LotteryStore> & {
+          stage?: string;
+          session?: Partial<DrawSession> | null;
+        };
+        const hasSession = Boolean(state?.session);
+        const persistedStage = String(state?.stage ?? "");
+
+        return {
+          ...state,
+          stage:
+            persistedStage === "confirm"
+              ? "setup"
+              : hasSession
+                ? ((persistedStage ?? "setup") as AppStage)
+                : "setup",
+          session: state?.session
+            ? {
+                ...state.session,
+                status:
+                  state.session.status === "complete"
+                    ? "complete"
+                    : state.stage === "drawing"
+                      ? "drawing"
+                      : "revealing",
+                revealedWinnerCount:
+                  typeof state.session.revealedWinnerCount === "number"
+                    ? state.session.revealedWinnerCount
+                    : 0,
+              }
+            : null,
+        };
+      },
     },
   ),
 );
-
