@@ -1,5 +1,7 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
+import { easterEggVideoUrl } from "../config/media";
 import { formatLotteryNumber, getSortedPrizeTiers } from "../domain/lottery";
 import type { DrawSession, LotteryConfig } from "../domain/types";
 import styles from "../App.module.css";
@@ -17,6 +19,9 @@ export function RevealScreen({
   onRevealNext,
   onNextPrize,
 }: RevealScreenProps) {
+  const [isEasterEggOpen, setIsEasterEggOpen] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const hasEasterEggVideo = Boolean(easterEggVideoUrl);
   const tiers = useMemo(() => getSortedPrizeTiers(config), [config]);
   const currentTier = tiers[session.currentPrizeIndex];
   const currentResult = session.results[session.currentPrizeIndex];
@@ -28,6 +33,67 @@ export function RevealScreen({
   const previousWinnerNumbers = revealedNumbers.slice(0, -1);
   const isAnimationComplete =
     session.revealedWinnerCount >= currentResult.winnerNumbers.length;
+
+  const closeEasterEgg = () => {
+    const videoElement = videoRef.current;
+
+    if (videoElement) {
+      videoElement.pause();
+      videoElement.currentTime = 0;
+    }
+
+    setIsEasterEggOpen(false);
+  };
+
+  useEffect(() => {
+    if (!isEasterEggOpen) {
+      return;
+    }
+
+    const videoElement = videoRef.current;
+
+    if (!videoElement) {
+      return;
+    }
+
+    videoElement.currentTime = 0;
+    void videoElement.play().catch(() => {
+      // Browsers may still require manual playback in some environments.
+    });
+  }, [isEasterEggOpen]);
+
+  useEffect(() => {
+    if (!isEasterEggOpen) {
+      return;
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      closeEasterEgg();
+    };
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [isEasterEggOpen]);
+
+  useEffect(() => {
+    if (!isEasterEggOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isEasterEggOpen]);
 
   const handleProgress = () => {
     if (isAnimationComplete) {
@@ -47,6 +113,58 @@ export function RevealScreen({
     handleProgress();
   };
 
+  const openEasterEgg: React.MouseEventHandler<HTMLButtonElement> = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!hasEasterEggVideo) {
+      return;
+    }
+
+    setIsEasterEggOpen(true);
+  };
+
+  const handleCloseOverlay: React.MouseEventHandler<HTMLElement> = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeEasterEgg();
+  };
+
+  const easterEggOverlay = isEasterEggOpen && hasEasterEggVideo ? (
+    <div
+      className={styles.easterEggOverlay}
+      onClick={handleCloseOverlay}
+      role="presentation"
+    >
+      <div
+        className={styles.easterEggDialog}
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+        role="dialog"
+        aria-label="イースターエッグ動画"
+      >
+        <button
+          aria-label="動画を閉じる"
+          className={styles.easterEggClose}
+          onClick={handleCloseOverlay}
+          type="button"
+        >
+          ×
+        </button>
+
+        <video
+          className={styles.easterEggVideo}
+          controls
+          onEnded={closeEasterEgg}
+          playsInline
+          ref={videoRef}
+          src={easterEggVideoUrl ?? undefined}
+        />
+      </div>
+    </div>
+  ) : null;
+
   return (
     <section className={styles.stageScreen}>
       <section
@@ -61,6 +179,16 @@ export function RevealScreen({
           role="button"
           tabIndex={0}
         >
+          {hasEasterEggVideo ? (
+            <button
+              aria-label="隠し動画を開く"
+              className={styles.easterEggTrigger}
+              data-testid="easter-egg-trigger"
+              onClick={openEasterEgg}
+              type="button"
+            />
+          ) : null}
+
           <div className={styles.revealCore}>
             <h2 className={styles.revealMainTier}>{currentTier.name}</h2>
             <div className={styles.revealHeroStage}>
@@ -119,6 +247,8 @@ export function RevealScreen({
           </div>
         </div>
       </section>
+
+      {easterEggOverlay ? createPortal(easterEggOverlay, document.body) : null}
     </section>
   );
 }

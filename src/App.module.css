@@ -536,6 +536,7 @@
   box-shadow: none;
   padding: 0;
   overflow: hidden;
+  position: relative;
 }
 
 .revealCore {
@@ -623,6 +624,70 @@
   font-size: 1.05rem;
   font-weight: 700;
   text-align: center;
+}
+
+.easterEggTrigger {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  background: transparent;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.easterEggTrigger:focus-visible {
+  opacity: 0.12;
+  outline: 2px solid rgba(255, 180, 77, 0.65);
+  outline-offset: -8px;
+}
+
+.easterEggOverlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.94);
+  z-index: 999;
+}
+
+.easterEggDialog {
+  position: relative;
+  display: grid;
+  width: 100dvw;
+  height: 100dvh;
+  padding: 0;
+  border-radius: 0;
+  background: #000;
+  box-shadow: none;
+}
+
+.easterEggClose {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 52px;
+  height: 52px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.easterEggVideo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  object-fit: contain;
 }
 
 .sectionHeader,
@@ -1022,6 +1087,17 @@
 
   .currentWinnerValue {
     font-size: clamp(5.4rem, 24vw, 10rem);
+  }
+
+  .easterEggOverlay {
+    padding: 0;
+  }
+
+  .easterEggClose {
+    top: 12px;
+    right: 12px;
+    width: 46px;
+    height: 46px;
   }
 
   .revealHistoryStrip {
