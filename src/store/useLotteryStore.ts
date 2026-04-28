@@ -4,7 +4,12 @@ import {
   createDrawSession,
   getSortedPrizeTiers,
 } from "../domain/lottery";
-import type { AppStage, DrawSession, LotteryConfig } from "../domain/types";
+import type {
+  AppStage,
+  DrawSession,
+  LotteryConfig,
+  PrizeResult,
+} from "../domain/types";
 
 type LotteryStore = {
   stage: AppStage;
@@ -33,6 +38,90 @@ const initialState = {
   stage: "setup" as AppStage,
   config: null,
   session: null,
+};
+
+const FALLBACK_STARTED_AT = new Date(0).toISOString();
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const isAppStage = (value: unknown): value is AppStage =>
+  value === "setup" ||
+  value === "drawing" ||
+  value === "reveal" ||
+  value === "complete";
+
+const sanitizeWinnerNumbers = (value: unknown): number[] =>
+  Array.isArray(value)
+    ? value.filter(
+        (entry): entry is number =>
+          typeof entry === "number" && Number.isInteger(entry) && entry > 0,
+      )
+    : [];
+
+const sanitizeResults = (value: unknown): PrizeResult[] =>
+  Array.isArray(value)
+    ? value.flatMap((entry) => {
+        if (!isRecord(entry) || typeof entry.prizeTierId !== "string") {
+          return [];
+        }
+
+        return [
+          {
+            prizeTierId: entry.prizeTierId,
+            winnerNumbers: sanitizeWinnerNumbers(entry.winnerNumbers),
+          },
+        ];
+      })
+    : [];
+
+const sanitizeSession = (
+  value: unknown,
+  stage: AppStage,
+): DrawSession | null => {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const results = sanitizeResults(value.results);
+
+  if (results.length === 0) {
+    return null;
+  }
+
+  const maxIndex = results.length - 1;
+  const rawCurrentPrizeIndex =
+    typeof value.currentPrizeIndex === "number" &&
+    Number.isInteger(value.currentPrizeIndex)
+      ? value.currentPrizeIndex
+      : 0;
+  const currentPrizeIndex = Math.min(Math.max(0, rawCurrentPrizeIndex), maxIndex);
+  const maxRevealCount = results[currentPrizeIndex]?.winnerNumbers.length ?? 0;
+  const rawRevealedWinnerCount =
+    typeof value.revealedWinnerCount === "number" &&
+    Number.isInteger(value.revealedWinnerCount)
+      ? value.revealedWinnerCount
+      : 0;
+  const revealedWinnerCount = Math.min(
+    Math.max(0, rawRevealedWinnerCount),
+    maxRevealCount,
+  );
+
+  return {
+    startedAt:
+      typeof value.startedAt === "string"
+        ? value.startedAt
+        : FALLBACK_STARTED_AT,
+    currentPrizeIndex,
+    revealedWinnerCount,
+    results,
+    status:
+      stage === "drawing"
+        ? "drawing"
+        : stage === "complete" || value.status === "complete"
+          ? "complete"
+          : "revealing",
+  };
 };
 
 export const useLotteryStore = create<LotteryStore>()(
@@ -134,38 +223,28 @@ export const useLotteryStore = create<LotteryStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 2,
+      version: 3,
       migrate: (persistedState) => {
         const state = (persistedState ?? {}) as Partial<LotteryStore> & {
           stage?: string;
-          session?: Partial<DrawSession> | null;
+          session?: unknown;
         };
-        const hasSession = Boolean(state?.session);
         const persistedStage = String(state?.stage ?? "");
+        const normalizedStage =
+          persistedStage === "confirm"
+            ? "setup"
+            : isAppStage(persistedStage)
+              ? persistedStage
+              : "setup";
+        const normalizedSession =
+          normalizedStage === "setup"
+            ? null
+            : sanitizeSession(state?.session, normalizedStage);
 
         return {
           ...state,
-          stage:
-            persistedStage === "confirm"
-              ? "setup"
-              : hasSession
-                ? ((persistedStage ?? "setup") as AppStage)
-                : "setup",
-          session: state?.session
-            ? {
-                ...state.session,
-                status:
-                  state.session.status === "complete"
-                    ? "complete"
-                    : state.stage === "drawing"
-                      ? "drawing"
-                      : "revealing",
-                revealedWinnerCount:
-                  typeof state.session.revealedWinnerCount === "number"
-                    ? state.session.revealedWinnerCount
-                    : 0,
-              }
-            : null,
+          stage: normalizedSession ? normalizedStage : "setup",
+          session: normalizedSession,
         };
       },
     },

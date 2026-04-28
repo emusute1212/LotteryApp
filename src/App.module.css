@@ -491,7 +491,7 @@
   height: 22px;
   border-radius: 999px;
   background: linear-gradient(135deg, #ffb46e, #ff7eb5);
-  animation: drawingPulse 1.2s ease-in-out infinite;
+  animation: drawing-pulse 1.2s ease-in-out infinite;
 }
 
 .drawingDot:nth-child(2) {
@@ -979,7 +979,7 @@
   font-weight: 700;
 }
 
-@keyframes drawingPulse {
+@keyframes drawing-pulse {
   0%,
   100% {
     transform: translateY(0);

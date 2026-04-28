@@ -64,4 +64,63 @@ describe("App persistence", () => {
     expect(screen.getByText("10番")).toBeInTheDocument();
     expect(screen.getByText("2名当選")).toBeInTheDocument();
   });
+
+  it("sanitizes invalid persisted session values during reload", async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          stage: "reveal",
+          config: persistedState.config,
+          session: {
+            status: "broken",
+            startedAt: 123,
+            currentPrizeIndex: 99,
+            revealedWinnerCount: 99,
+            results: [
+              { prizeTierId: "first", winnerNumbers: [7] },
+              { prizeTierId: "second", winnerNumbers: [10, 22] },
+              { prizeTierId: 7, winnerNumbers: ["x"] },
+            ],
+          },
+        },
+        version: 2,
+      }),
+    );
+
+    await useLotteryStore.persist.rehydrate();
+
+    expect(useLotteryStore.getState()).toMatchObject({
+      stage: "reveal",
+      session: {
+        status: "revealing",
+        startedAt: "1970-01-01T00:00:00.000Z",
+        currentPrizeIndex: 1,
+        revealedWinnerCount: 2,
+        results: [
+          { prizeTierId: "first", winnerNumbers: [7] },
+          { prizeTierId: "second", winnerNumbers: [10, 22] },
+        ],
+      },
+    });
+  });
+
+  it("falls back to setup when persisted stage is invalid", async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          stage: "broken-stage",
+          config: persistedState.config,
+          session: persistedState.session,
+        },
+        version: 2,
+      }),
+    );
+
+    await useLotteryStore.persist.rehydrate();
+
+    expect(useLotteryStore.getState().stage).toBe("setup");
+    expect(useLotteryStore.getState().session).toBeNull();
+  });
 });

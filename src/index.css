@@ -10,13 +10,14 @@
   --color-muted-strong: rgba(17, 33, 68, 0.68);
   --color-accent-strong: #c97c05;
   --shadow-card: 0 22px 48px rgba(0, 0, 0, 0.2);
+
   font-family:
     "Avenir Next",
     "Hiragino Sans",
     "Yu Gothic",
     sans-serif;
   font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  text-rendering: optimizelegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -53,4 +54,3 @@ input {
 #root {
   min-height: 100vh;
 }
-

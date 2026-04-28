@@ -105,6 +105,10 @@ export function RevealScreen({
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLElement> = (event) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+
     if (event.key !== "Enter" && event.key !== " ") {
       return;
     }
