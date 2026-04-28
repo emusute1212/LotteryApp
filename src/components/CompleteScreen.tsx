@@ -20,7 +20,6 @@ export function CompleteScreen({
   onReset,
 }: CompleteScreenProps) {
   const tiers = getSortedPrizeTiers(config);
-  const totalWinnerCount = tiers.reduce((sum, tier) => sum + tier.winnerCount, 0);
 
   return (
     <section className={styles.stageScreen}>
@@ -29,20 +28,6 @@ export function CompleteScreen({
           <div>
             <p className={styles.stageEyebrow}>Complete</p>
             <h2 className={styles.stageTitle}>抽選完了</h2>
-            <p className={styles.stageLead}>
-              全ての等級の当選番号が確定しました。
-            </p>
-          </div>
-        </div>
-
-        <div className={styles.stageMetaRow}>
-          <div className={styles.stageMetaPill}>
-            <span>参加者</span>
-            <strong>{config.participantCount}名</strong>
-          </div>
-          <div className={styles.stageMetaPill}>
-            <span>当選人数合計</span>
-            <strong>{totalWinnerCount}名</strong>
           </div>
         </div>
 
