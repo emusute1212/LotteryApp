@@ -3,6 +3,9 @@ import type { DrawSession, LotteryConfig, PrizeResult, PrizeTier } from "./types
 export const getSortedPrizeTiers = (config: LotteryConfig): PrizeTier[] =>
   [...config.prizeTiers].sort((left, right) => left.order - right.order);
 
+export const getRevealPrizeTiers = (config: LotteryConfig): PrizeTier[] =>
+  [...getSortedPrizeTiers(config)].reverse();
+
 export const getTotalWinnerCount = (config: LotteryConfig): number =>
   config.prizeTiers.reduce((sum, tier) => sum + tier.winnerCount, 0);
 
@@ -35,7 +38,7 @@ export const createDrawSession = (
   config: LotteryConfig,
   rng: () => number = Math.random,
 ): DrawSession => {
-  const sortedTiers = getSortedPrizeTiers(config);
+  const sortedTiers = getRevealPrizeTiers(config);
   const pool = createNumberPool(config.participantCount, rng);
   let cursor = 0;
 
@@ -56,6 +59,25 @@ export const createDrawSession = (
     revealedWinnerCount: 0,
     results,
   };
+};
+
+export const sortPrizeResultsByRevealOrder = (
+  config: LotteryConfig,
+  results: PrizeResult[],
+): PrizeResult[] => {
+  const revealTiers = getRevealPrizeTiers(config);
+  const resultByPrizeTierId = new Map(
+    results.map((result) => [result.prizeTierId, result] as const),
+  );
+  const knownPrizeTierIds = new Set(revealTiers.map((tier) => tier.id));
+
+  return [
+    ...revealTiers.flatMap((tier) => {
+      const result = resultByPrizeTierId.get(tier.id);
+      return result ? [result] : [];
+    }),
+    ...results.filter((result) => !knownPrizeTierIds.has(result.prizeTierId)),
+  ];
 };
 
 export const getTierResult = (

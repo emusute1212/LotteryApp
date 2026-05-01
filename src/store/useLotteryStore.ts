@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import {
   createDrawSession,
   getSortedPrizeTiers,
+  sortPrizeResultsByRevealOrder,
 } from "../domain/lottery";
 import type {
   AppStage,
@@ -58,6 +59,51 @@ const sanitizeWinnerNumbers = (value: unknown): number[] =>
           typeof entry === "number" && Number.isInteger(entry) && entry > 0,
       )
     : [];
+
+const sanitizeConfig = (value: unknown): LotteryConfig | null => {
+  if (
+    !isRecord(value) ||
+    typeof value.participantCount !== "number" ||
+    !Number.isInteger(value.participantCount) ||
+    value.participantCount < 1 ||
+    !Array.isArray(value.prizeTiers)
+  ) {
+    return null;
+  }
+
+  const prizeTiers = value.prizeTiers.flatMap((entry) => {
+    if (
+      !isRecord(entry) ||
+      typeof entry.id !== "string" ||
+      typeof entry.name !== "string" ||
+      typeof entry.winnerCount !== "number" ||
+      !Number.isInteger(entry.winnerCount) ||
+      entry.winnerCount < 1 ||
+      typeof entry.order !== "number" ||
+      !Number.isInteger(entry.order)
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        id: entry.id,
+        name: entry.name,
+        winnerCount: entry.winnerCount,
+        order: entry.order,
+      },
+    ];
+  });
+
+  if (prizeTiers.length === 0) {
+    return null;
+  }
+
+  return normalizeConfig({
+    participantCount: value.participantCount,
+    prizeTiers,
+  });
+};
 
 const sanitizeResults = (value: unknown): PrizeResult[] =>
   Array.isArray(value)
@@ -121,6 +167,36 @@ const sanitizeSession = (
         : stage === "complete" || value.status === "complete"
           ? "complete"
           : "revealing",
+  };
+};
+
+const normalizeSessionForRevealOrder = (
+  config: LotteryConfig | null,
+  session: DrawSession | null,
+  persistedVersion: number,
+): DrawSession | null => {
+  if (!config || !session) {
+    return session;
+  }
+
+  const results = sortPrizeResultsByRevealOrder(config, session.results);
+
+  if (results.length === 0) {
+    return null;
+  }
+
+  const maxIndex = results.length - 1;
+  const currentPrizeIndex =
+    persistedVersion < 4
+      ? Math.min(Math.max(0, maxIndex - session.currentPrizeIndex), maxIndex)
+      : Math.min(Math.max(0, session.currentPrizeIndex), maxIndex);
+  const maxRevealCount = results[currentPrizeIndex]?.winnerNumbers.length ?? 0;
+
+  return {
+    ...session,
+    currentPrizeIndex,
+    revealedWinnerCount: Math.min(session.revealedWinnerCount, maxRevealCount),
+    results,
   };
 };
 
@@ -223,9 +299,10 @@ export const useLotteryStore = create<LotteryStore>()(
     }),
     {
       name: STORAGE_KEY,
-      version: 3,
-      migrate: (persistedState) => {
+      version: 4,
+      migrate: (persistedState, version) => {
         const state = (persistedState ?? {}) as Partial<LotteryStore> & {
+          config?: unknown;
           stage?: string;
           session?: unknown;
         };
@@ -236,13 +313,19 @@ export const useLotteryStore = create<LotteryStore>()(
             : isAppStage(persistedStage)
               ? persistedStage
               : "setup";
+        const normalizedConfig = sanitizeConfig(state?.config);
         const normalizedSession =
           normalizedStage === "setup"
             ? null
-            : sanitizeSession(state?.session, normalizedStage);
+            : normalizeSessionForRevealOrder(
+                normalizedConfig,
+                sanitizeSession(state?.session, normalizedStage),
+                version,
+              );
 
         return {
           ...state,
+          config: normalizedConfig,
           stage: normalizedSession ? normalizedStage : "setup",
           session: normalizedSession,
         };
