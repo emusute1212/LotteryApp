@@ -95,11 +95,11 @@ describe("App persistence", () => {
       session: {
         status: "revealing",
         startedAt: "1970-01-01T00:00:00.000Z",
-        currentPrizeIndex: 1,
+        currentPrizeIndex: 0,
         revealedWinnerCount: 2,
         results: [
-          { prizeTierId: "first", winnerNumbers: [7] },
           { prizeTierId: "second", winnerNumbers: [10, 22] },
+          { prizeTierId: "first", winnerNumbers: [7] },
         ],
       },
     });

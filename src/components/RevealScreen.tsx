@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { easterEggVideoUrl } from "../config/media";
-import { formatLotteryNumber, getSortedPrizeTiers } from "../domain/lottery";
+import { formatLotteryNumber, getRevealPrizeTiers } from "../domain/lottery";
 import type { DrawSession, LotteryConfig } from "../domain/types";
 import styles from "../App.module.css";
 
@@ -22,7 +22,7 @@ export function RevealScreen({
   const [isEasterEggOpen, setIsEasterEggOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hasEasterEggVideo = Boolean(easterEggVideoUrl);
-  const tiers = useMemo(() => getSortedPrizeTiers(config), [config]);
+  const tiers = useMemo(() => getRevealPrizeTiers(config), [config]);
   const currentTier = tiers[session.currentPrizeIndex];
   const currentResult = session.results[session.currentPrizeIndex];
   const revealedNumbers = currentResult.winnerNumbers.slice(

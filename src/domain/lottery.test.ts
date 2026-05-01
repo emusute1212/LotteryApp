@@ -25,10 +25,9 @@ describe("createDrawSession", () => {
     const session = createDrawSession(sampleConfig, () => 0.13);
 
     expect(session.results.map((result) => result.prizeTierId)).toEqual([
-      "grand",
-      "second",
       "third",
+      "second",
+      "grand",
     ]);
   });
 });
-

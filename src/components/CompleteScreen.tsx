@@ -1,6 +1,6 @@
 import {
   formatLotteryNumber,
-  getSortedPrizeTiers,
+  getRevealPrizeTiers,
   getTierResult,
 } from "../domain/lottery";
 import type { DrawSession, LotteryConfig } from "../domain/types";
@@ -19,7 +19,7 @@ export function CompleteScreen({
   onRestart,
   onReset,
 }: CompleteScreenProps) {
-  const tiers = getSortedPrizeTiers(config);
+  const tiers = getRevealPrizeTiers(config);
 
   return (
     <section className={styles.stageScreen}>
