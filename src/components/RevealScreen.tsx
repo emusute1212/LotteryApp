@@ -1,7 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { AnimatePresence, motion } from "framer-motion";
-import { easterEggVideoUrl } from "../config/media";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  easterEggLotteryAward,
+  easterEggLotteryResult,
+  easterEggVideoUrl,
+} from "../config/media";
 import { formatLotteryNumber, getRevealPrizeTiers } from "../domain/lottery";
 import type { DrawSession, LotteryConfig } from "../domain/types";
 import styles from "../App.module.css";
@@ -13,15 +17,30 @@ type RevealScreenProps = {
   onNextPrize: () => void;
 };
 
+type EasterEggPhase = "closed" | "video" | "result";
+
+const EASTER_EGG_WINNER_MIN_FONT_SIZE = 44;
+const EASTER_EGG_WINNER_MAX_FONT_SIZE = 160;
+const EASTER_EGG_WINNER_SAFE_GUTTER = 24;
+const EASTER_EGG_WINNER_SAFE_HEIGHT = 16;
+
 export function RevealScreen({
   config,
   session,
   onRevealNext,
   onNextPrize,
 }: RevealScreenProps) {
-  const [isEasterEggOpen, setIsEasterEggOpen] = useState(false);
+  const [easterEggPhase, setEasterEggPhase] = useState<EasterEggPhase>("closed");
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const easterEggWinnerStageRef = useRef<HTMLDivElement | null>(null);
+  const easterEggWinnerWrapRef = useRef<HTMLDivElement | null>(null);
+  const easterEggWinnerRef = useRef<HTMLElement | null>(null);
+  const prefersReducedMotion = useReducedMotion();
   const hasEasterEggVideo = Boolean(easterEggVideoUrl);
+  const hasEasterEggResult = Boolean(
+    easterEggLotteryAward && easterEggLotteryResult,
+  );
+  const isEasterEggOpen = easterEggPhase !== "closed";
   const tiers = useMemo(() => getRevealPrizeTiers(config), [config]);
   const currentTier = tiers[session.currentPrizeIndex];
   const currentResult = session.results[session.currentPrizeIndex];
@@ -38,15 +57,19 @@ export function RevealScreen({
     const videoElement = videoRef.current;
 
     if (videoElement) {
-      videoElement.pause();
+      try {
+        videoElement.pause();
+      } catch {
+        // Ignore media teardown failures in restricted environments.
+      }
       videoElement.currentTime = 0;
     }
 
-    setIsEasterEggOpen(false);
+    setEasterEggPhase("closed");
   };
 
   useEffect(() => {
-    if (!isEasterEggOpen) {
+    if (easterEggPhase !== "video") {
       return;
     }
 
@@ -57,10 +80,16 @@ export function RevealScreen({
     }
 
     videoElement.currentTime = 0;
-    void videoElement.play().catch(() => {
-      // Browsers may still require manual playback in some environments.
-    });
-  }, [isEasterEggOpen]);
+
+    try {
+      const playback = videoElement.play();
+      void playback?.catch(() => {
+        // Browsers may still require manual playback in some environments.
+      });
+    } catch {
+      // Some test or embedded environments may block programmatic playback.
+    }
+  }, [easterEggPhase]);
 
   useEffect(() => {
     if (!isEasterEggOpen) {
@@ -95,6 +124,90 @@ export function RevealScreen({
     };
   }, [isEasterEggOpen]);
 
+  useLayoutEffect(() => {
+    if (easterEggPhase !== "result") {
+      return;
+    }
+
+    const wrapElement = easterEggWinnerWrapRef.current;
+    const textElement = easterEggWinnerRef.current;
+    const stageElement = easterEggWinnerStageRef.current;
+
+    if (!wrapElement || !textElement || !stageElement) {
+      return;
+    }
+
+    let frameId = 0;
+
+    const fitWinnerText = () => {
+      const wrapStyle = window.getComputedStyle(wrapElement);
+      const paddingInline =
+        Number.parseFloat(wrapStyle.paddingLeft) +
+        Number.parseFloat(wrapStyle.paddingRight);
+      const availableWidth = Math.max(
+        wrapElement.clientWidth - paddingInline - EASTER_EGG_WINNER_SAFE_GUTTER,
+        EASTER_EGG_WINNER_MIN_FONT_SIZE,
+      );
+      const availableHeight = Math.max(
+        stageElement.clientHeight - EASTER_EGG_WINNER_SAFE_HEIGHT,
+        EASTER_EGG_WINNER_MIN_FONT_SIZE,
+      );
+
+      if (availableWidth <= 0 || availableHeight <= 0) {
+        return;
+      }
+
+      let low = EASTER_EGG_WINNER_MIN_FONT_SIZE;
+      let high = EASTER_EGG_WINNER_MAX_FONT_SIZE;
+      let best = EASTER_EGG_WINNER_MIN_FONT_SIZE;
+
+      while (low <= high) {
+        const middle = Math.floor((low + high) / 2);
+        textElement.style.fontSize = `${middle}px`;
+
+        const textRect = textElement.getBoundingClientRect();
+
+        if (
+          textElement.scrollWidth <= availableWidth &&
+          textRect.height <= availableHeight
+        ) {
+          best = middle;
+          low = middle + 1;
+        } else {
+          high = middle - 1;
+        }
+      }
+
+      textElement.style.fontSize = `${best}px`;
+    };
+
+    const scheduleFit = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(fitWinnerText);
+    };
+
+    scheduleFit();
+
+    const resizeObserver =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            scheduleFit();
+          })
+        : null;
+
+    resizeObserver?.observe(wrapElement);
+    window.addEventListener("resize", scheduleFit);
+    void document.fonts?.ready.then(() => {
+      scheduleFit();
+    });
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      resizeObserver?.disconnect();
+      window.removeEventListener("resize", scheduleFit);
+    };
+  }, [easterEggPhase, easterEggLotteryResult]);
+
   const handleProgress = () => {
     if (isAnimationComplete) {
       onNextPrize();
@@ -125,7 +238,7 @@ export function RevealScreen({
       return;
     }
 
-    setIsEasterEggOpen(true);
+    setEasterEggPhase("video");
   };
 
   const handleCloseOverlay: React.MouseEventHandler<HTMLElement> = (event) => {
@@ -134,40 +247,153 @@ export function RevealScreen({
     closeEasterEgg();
   };
 
-  const easterEggOverlay = isEasterEggOpen && hasEasterEggVideo ? (
-    <div
-      className={styles.easterEggOverlay}
-      onClick={handleCloseOverlay}
-      role="presentation"
-    >
-      <div
-        className={styles.easterEggDialog}
-        onClick={(event) => {
-          event.stopPropagation();
-        }}
-        role="dialog"
-        aria-label="イースターエッグ動画"
-      >
-        <button
-          aria-label="動画を閉じる"
-          className={styles.easterEggClose}
-          onClick={handleCloseOverlay}
-          type="button"
-        >
-          ×
-        </button>
+  const handleVideoEnded = () => {
+    if (hasEasterEggResult) {
+      setEasterEggPhase("result");
+      return;
+    }
 
-        <video
-          className={styles.easterEggVideo}
-          controls
-          onEnded={closeEasterEgg}
-          playsInline
-          ref={videoRef}
-          src={easterEggVideoUrl ?? undefined}
-        />
+    closeEasterEgg();
+  };
+
+  const easterEggOverlay =
+    easterEggPhase === "video" && hasEasterEggVideo ? (
+      <div
+        className={`${styles.easterEggOverlay} ${styles.easterEggVideoOverlay}`}
+        onClick={handleCloseOverlay}
+        role="presentation"
+      >
+        <div
+          className={styles.easterEggDialog}
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          role="dialog"
+          aria-label="イースターエッグ動画"
+        >
+          <button
+            aria-label="動画を閉じる"
+            className={styles.easterEggClose}
+            onClick={handleCloseOverlay}
+            type="button"
+          >
+            ×
+          </button>
+
+          <video
+            className={styles.easterEggVideo}
+            controls
+            data-testid="easter-egg-video"
+            onEnded={handleVideoEnded}
+            playsInline
+            ref={videoRef}
+            src={easterEggVideoUrl ?? undefined}
+          />
+        </div>
       </div>
-    </div>
-  ) : null;
+    ) : easterEggPhase === "result" &&
+        easterEggLotteryAward &&
+        easterEggLotteryResult ? (
+      <motion.div
+        className={`${styles.easterEggOverlay} ${styles.easterEggResultOverlay}`}
+        data-testid="easter-egg-result-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        onClick={handleCloseOverlay}
+        role="presentation"
+        transition={{ duration: prefersReducedMotion ? 0 : 0.28, ease: "easeOut" }}
+      >
+        <motion.section
+          aria-label="イースターエッグ結果"
+          className={`${styles.panel} ${styles.revealMinimalPanel} ${styles.easterEggResultPanel}`}
+          data-testid="easter-egg-result"
+          initial={
+            prefersReducedMotion
+              ? { opacity: 1 }
+              : { opacity: 0, y: 22, scale: 0.985 }
+          }
+          animate={
+            prefersReducedMotion
+              ? { opacity: 1 }
+              : { opacity: 1, y: 0, scale: 1 }
+          }
+          role="dialog"
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { duration: 0.42, ease: [0.2, 0.8, 0.2, 1] }
+          }
+        >
+          <div
+            className={`${styles.revealSurface} ${styles.revealSurfaceMinimal} ${styles.easterEggResultSurface}`}
+          >
+            <motion.div
+              className={`${styles.revealCore} ${styles.easterEggResultCore}`}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: {
+                  transition: prefersReducedMotion
+                    ? { staggerChildren: 0 }
+                    : { staggerChildren: 0.11, delayChildren: 0.1 },
+                },
+              }}
+            >
+              <motion.h2
+                className={`${styles.revealMainTier} ${styles.easterEggResultAward}`}
+                variants={{
+                  hidden: prefersReducedMotion
+                    ? { opacity: 1 }
+                    : { opacity: 0, y: -18, filter: "blur(6px)" },
+                  visible: prefersReducedMotion
+                    ? { opacity: 1 }
+                    : { opacity: 1, y: 0, filter: "blur(0px)" },
+                }}
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { duration: 0.34, ease: "easeOut" }
+                }
+              >
+                {easterEggLotteryAward}
+              </motion.h2>
+              <div
+                className={styles.revealHeroStage}
+                ref={easterEggWinnerStageRef}
+              >
+                <div
+                  className={`${styles.revealHeroNumberWrap} ${styles.easterEggResultWinnerWrap}`}
+                  ref={easterEggWinnerWrapRef}
+                >
+                  <motion.strong
+                    className={`${styles.currentWinnerValue} ${styles.easterEggResultWinner}`}
+                    initial={
+                      prefersReducedMotion
+                        ? { opacity: 1 }
+                        : { opacity: 0, y: 28, scale: 0.92, filter: "blur(10px)" }
+                    }
+                    animate={
+                      prefersReducedMotion
+                        ? { opacity: 1 }
+                        : { opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }
+                    }
+                    ref={easterEggWinnerRef}
+                    transition={
+                      prefersReducedMotion
+                        ? { duration: 0 }
+                        : { duration: 0.48, ease: [0.16, 1, 0.3, 1], delay: 0.14 }
+                    }
+                  >
+                    {easterEggLotteryResult}
+                  </motion.strong>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.section>
+      </motion.div>
+    ) : null;
 
   return (
     <section className={styles.stageScreen}>

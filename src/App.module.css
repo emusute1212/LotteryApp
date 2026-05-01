@@ -651,8 +651,20 @@
   display: grid;
   place-items: center;
   padding: 0;
-  background: rgba(0, 0, 0, 0.94);
   z-index: 999;
+}
+
+.easterEggVideoOverlay {
+  background: rgba(0, 0, 0, 0.94);
+}
+
+.easterEggResultOverlay {
+  padding: 18px 16px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255, 214, 98, 0.3), transparent 18%),
+    radial-gradient(circle at 85% 12%, rgba(255, 161, 195, 0.22), transparent 16%),
+    linear-gradient(180deg, rgba(255, 248, 239, 0.98) 0%, rgba(255, 253, 250, 0.98) 52%, rgba(255, 244, 223, 0.98) 100%);
+  backdrop-filter: blur(10px);
 }
 
 .easterEggDialog {
@@ -688,6 +700,64 @@
   height: 100%;
   background: #000;
   object-fit: contain;
+}
+
+.easterEggResultPanel {
+  width: min(1080px, 100%);
+  height: calc(100dvh - 120px);
+  margin: 0;
+  padding: 18px;
+  border: 2px solid rgba(191, 148, 43, 0.4);
+  background: rgba(255, 253, 246, 0.94);
+  box-shadow:
+    0 28px 80px rgba(116, 95, 34, 0.14),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.85);
+}
+
+.easterEggResultSurface {
+  display: grid;
+  height: 100%;
+  min-height: 100%;
+  border: 10px solid rgba(233, 198, 107, 0.9);
+  border-radius: 30px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 247, 224, 0.96)),
+    rgba(255, 255, 255, 0.96);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.92),
+    inset 0 0 0 14px rgba(145, 96, 24, 0.08);
+}
+
+.easterEggResultCore {
+  grid-template-rows: auto auto;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(24px, 4vh, 42px);
+  height: 100%;
+}
+
+.easterEggResultAward {
+  color: #7a4c00;
+  text-shadow: 0 10px 28px rgba(203, 164, 72, 0.16);
+}
+
+.easterEggResultWinnerWrap {
+  width: min(100%, 1120px);
+  padding: clamp(10px, 1.8vh, 18px) clamp(20px, 2.4vw, 40px);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.easterEggResultWinner {
+  display: inline-block;
+  max-width: none;
+  color: #5c3700;
+  font-size: 160px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.04;
+  text-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .sectionHeader,
@@ -1089,7 +1159,7 @@
     font-size: clamp(5.4rem, 24vw, 10rem);
   }
 
-  .easterEggOverlay {
+  .easterEggVideoOverlay {
     padding: 0;
   }
 
@@ -1098,6 +1168,24 @@
     right: 12px;
     width: 46px;
     height: 46px;
+  }
+
+  .easterEggResultOverlay {
+    padding: 12px;
+  }
+
+  .easterEggResultPanel {
+    height: calc(100dvh - 96px);
+    padding: 16px 12px;
+  }
+
+  .easterEggResultSurface {
+    border-width: 7px;
+    border-radius: 24px;
+  }
+
+  .easterEggResultWinner {
+    max-width: none;
   }
 
   .revealHistoryStrip {
