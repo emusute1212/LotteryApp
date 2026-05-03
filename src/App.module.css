@@ -391,6 +391,21 @@
   color: #24355c;
 }
 
+.stagePanelComplete {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  height: calc(100dvh - 120px);
+  padding-bottom: 20px;
+  overflow: hidden;
+}
+
+.completeListViewport {
+  min-height: 0;
+  overflow-y: auto;
+  margin-top: 20px;
+  padding-right: 6px;
+}
+
 .drawingOnlyPanel {
   display: grid;
   place-items: center;
@@ -477,6 +492,13 @@
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 28px;
+}
+
+.stagePanelComplete .stageActionRow {
+  margin-top: 20px;
+  padding-top: 12px;
+  padding-bottom: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.9) 30%);
 }
 
 .drawingDots {
@@ -795,8 +817,8 @@
 .completeList {
   display: grid;
   gap: 20px;
-  margin-top: 20px;
 }
+
 
 .fieldBlock {
   display: grid;
@@ -1143,6 +1165,15 @@
 
   .stagePanel {
     padding: 24px 20px;
+  }
+
+  .stagePanelComplete {
+    height: calc(100dvh - 96px);
+    padding-bottom: 14px;
+  }
+
+  .completeListViewport {
+    padding-right: 2px;
   }
 
   .drawingOnlyPanel {
